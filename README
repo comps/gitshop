@@ -1,0 +1,19 @@
+== Intro ==
+
+This is a repository dedicated to Gitshop, a "Git workshop" / presentations
+series I do for Red Hat. You can find various materials in here, check out
+the branches.
+
+A quick (and possibly non-complete) index of branches:
+
+- intro - you are here
+
+- workshops - starting repo for the 'workshop' slide in each presentation
+
+- slides - presentation slides
+
+- videos - (currently) links to captured videos from the presentations,
+           I may use some kind of "big file storage" mechanism later on
+
+- 2012-* - an old (and incomplete) series I did back in 2012, for archival
+           purposes only
