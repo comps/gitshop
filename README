@@ -1,0 +1,6 @@
+These are "git bundles" (see man git-bundle).
+
+To use them as repositories, simply
+
+  git clone --mirror workshop-123.bundle my_new_repo
+  cd my_new_repo
