@@ -1,0 +1,138 @@
+== OVERVIEW, IDEAS, SECTIONS ==
+
+- 1. object model
+- 2. index, commit, staging changes (git add), ..
+- 3. repositories, clone, push, pull, URIs, remotes, tracking branches
+- 4. branching, detached HEAD, stash
+- (5.) -- intermezzo -- baseos/sec presentation - "git - best practices"
+- 5. rebase, interactive rebase, rebase --onto, cherry-pick
+- 6. merge, part 1
+- 7. merge, part 2
+- 8. recovery (normal: reset, reflog, rebase --abort; advanced: git-fsck, fishing dangling blobs)
+     + cleanup (git-gc, git-repack, git-prune, removing reflog entries, ..)
+- 9. submitting upstream (format-patch, send-email, git-am, request-pull, ..)
+
+- ... the end? (advanced topics below)
+-10. git-rerere, git-filter-branch, git-svn
+-11. other / misc: git-archive, git-daemon, gitolite, git-shell, repo hooks, ..
+
+== DETAILS ==
+
+- first presentation, git object model
+  - abstract
+    - won't compare svn,cvs vs git
+    - git is very rich suite, won't show all features (git-archive, ..)
+    - I know git v1.5.x (no notes, ...)
+    - porcelain vs plumbing
+    - git commands with dash (git-log) and without dash (git log)
+      - show no-pager and export PATH libexec example
+    - strict argument order (POSIXLY_CORRECT / POSIX_ME_HARDER)
+      - git cmd -a with_arg -b --long-c with_arg <revspec> [revspec]... -- file1 file2...
+    - not for git developers, but git users (even with all this lowlevel stuff)
+  - git uses two basic ideas: objects and references (refs)
+    - objects store data, references point to objects
+    - mention unreferenced "dangling" objects (garbage collection)
+  - basic object types, blob, tree, commit, tag
+    - file names / modes in tree objects
+    - git doesn't work with diffs, it creates new blobs (delta compression)
+  - basic reference types, branch, tag, other (special - HEAD, ...)
+  - .. that's all the magic, you now understand git
+  - show hash-object, write-tree
+  - show loose/packed objects, pack .idx, entire .git/ structure
+    - refs/x/name - explicit type + name - useful when tag name == branch name
+
+- second presentation, staging, the index
+  - intruduction: ie. not database "index"
+  - brief: index low level + (last presentation + index) in high level
+  - git has 3 "trees" - object database, index, working tree
+  - common workflow - add to index and commit
+  - index structure resembles tree object structure
+  - example of common workflow (^^) with plumbing commands
+  - git-commit takes trees/subtrees from index, creates root tree from them
+    for the commit being created
+  - git checkout - from repo db to index (reset), then from index to working tree (git-checkout-index)
+  - git reset - main mode, 3 parts (soft, mixed, hard)
+    - secondary mode, git-reset <commitish> -- file1 file2 == checkout to index
+  - index is "virtual" - doesn't store data, just points to data
+    - that's why git-add has to create trees/blobs first
+  - garbage generation - staged, never commited objects
+  - (show) demonstrate previous presentation - object creation during git-add
+  - show + explain git add --patch
+
+- third presentation, git repositories, their communication, remotes
+  - OVERVIEW
+    - repo design, concepts, ..
+      - finish previous 2 presentations, .git structure, loose vs packed objects
+    - communication protocols / ways
+    - communication related commands
+      - starting with git-clone
+        - mention --bare
+      - git-fetch on URL directly (and FETCH_HEAD, no remote created)
+      - git-pull , git-push
+        - push revspec (local:remote), direct branch creation (commit:refs/heads/name)
+    - show redhat user repo creation (?)
+
+  - no protocol details
+  - decentralized design
+  - bare vs normal + working tree, HEAD in bare = what to checkout on clone
+
+  - various URI specifications, local (disk) repos
+  - basic operation - git clone - clones only referencable objects (and their parents)
+  - git fetch (FETCH_HEAD, ...)
+  - push revspec (local:remote), direct branch creation (commit:refs/heads/name)
+  - ..
+
+  - remotes
+    - add/remove/..
+    - can be added manually (.git/config)
+    - remote "branches"
+      - how they're stored
+      - no origin/tagname, tags are shared
+    - tracking (local) branches
+    - objects from remotes stored in one local object database, along with local objects
+
+- fourth presentation, branching, detached HEAD, stash - CANCELLED
+  - special refs (HEAD, FETCH_HEAD, ..)
+    - HEAD points to currently checked out ref - commit->tree
+      - not latest commit on branch (tip)
+  - basic rev specification (just ref~N, others @ merge)
+  - git symbolic-ref (HEAD used to be a symlink)
+  - detached HEAD
+    - useful for testing merges, commits, etc.
+    - useful for simple one-branch workflow (no local branch)
+    - push HEAD to new branch on remote
+  - checkout --orphan (orphaned branch)
+  - git stash
+
+- fifth presentation, rebase
+  - cherry-pick
+  - normal, --onto, interactive
+
+- merge - overview and techniques
+  - just commit with 2 parents
+    - fast forward vs no-ff
+    - root tree object = combination of N trees, possibly with local changes
+    - show git-rev-parse commit "tree" structure / advanced refspec
+  - merge strategies
+    - explain 3-way merge, ours, theirs, common ancestor,
+      comparing two trees vs comparing each tree against a common ancestor
+
+- merge - conflicts and their resolution
+  - previous presentation, [only when both versions differ against merge base]
+    - (what happens) - (below)
+  - explain LOCAL, BASE, REMOTE, {final file} for 3-way merge resolution
+  - tree recontruction from diff (3-way, ie. cherry-pick, git-am)
+    - mention differences between common ancestor and "ancestor" found
+      by git-merge-base
+      - use ie. conflict on git-am as example, where
+          BASE = HEAD~1
+          LOCAL = HEAD
+          REMOTE = patch to be applied
+        - all reconsructed from tree hashes in diff
+    - git tracks content: git-am applies a patch created for another
+      file (path) by looking at tree hashes and doing merge
+  - show :2:path/file , :3:path/file , :0:path/file after merge resolution
+    - "index stages"
+    - remind commithash:path/file
+  - automatic conflict resolution (mention git-rerere)
+  - show combined diff (git-diff --cc)  ???
